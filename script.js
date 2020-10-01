@@ -22,7 +22,7 @@ function init() {
     }
     let frameCount = 0;
     let bulletList = [];
-    let enemyListInLine = [];
+    let enemyList = [];
     let background = new createjs.Shape();
     background.graphics.beginFill("#000000");
     background.graphics.drawRect(0, 0, stage.canvas.width, stage.canvas.height);
@@ -56,35 +56,39 @@ function init() {
             bulletList.push(bullet);
         }
         function makeEnemy(life) {
-
+            let enemyListInLine = [];
             for (let i = 0; i < 6; i++) {
                 let enemy = new createjs.Bitmap("emoji_u1f47e.png");
                 enemy.scaleX = 0.2;
                 enemy.scaleY = 0.2;
-                enemy.x = i*60;
+                enemy.x = i * 60;
                 enemy.y = 0;
                 stage.addChild(enemy);
                 let enemyInfo = {
-                    "enemy":enemy,
-                    "life":life
+                    "enemy": enemy,
+                    "life": life
                 }
-                enemyListInLine.push([enemy,life]);
+                enemyListInLine.push(enemyInfo);
             }
+            return enemyListInLine;
         }
-        function moveEnemy(){
-            enemyListInLine.forEach(enemy =>{
-                enemy.y += 5;
-            })
+        function moveEnemy() {
+            for (let i = 0; i < enemyList.length; i++) {
+                enemyList[i].forEach(enemy => {
+                    enemy["enemy"].y += 10;
+                });
+            }
         }
         frameCount++;
         movePlayer();
-        if(frameCount % 120 === 0){
-            makeEnemy(30);
-        }
-        moveEnemy();
         if (frameCount % 20 === 0) {
             shootBullet();
         }
+        if (frameCount % 120 === 0) {
+            enemyList.push(makeEnemy(30));
+        }
+        moveEnemy();
+        //玉が画面外に行ったときに消去
         for (let i = 0; i < bulletList.length; i++) {
             bulletList[i].y -= 10;
             if (bulletList[i].y < 0) {
@@ -92,18 +96,30 @@ function init() {
                 bulletList.splice(i, 1);
             }
         }
-        for(let i = 0;i < enemyListInLine.length;i++){
-            for(let j = 0;j < bulletList.length;j++){
-                let bullet = bulletList[j];
-                let enemy = enemyListInLine[i];
-                let point = bullet.globalToLocal(enemy.x,enemy.y);
-                if(bullet.hitTest(point.x,point.y) == true){
-                    stage.removeChild(bulletList[j]);
-                    bulletList.splice(j,1);
-                    enemy[0] -=3;
-                    if(enemy[1] <= 0){
-                        stage.removeChild(enemyListInLine[i][0]);
-                        enemyListInLine.splice(i,1);
+        //敵が画面外に行ったとき消去
+        for (let k = 0; k < enemyList.length; k++) {
+            for (let i = 0; i < enemyList[k].length;i++) {
+                if (enemyList[k][i]["enemy"].y >= 650) {
+                    stage.removeChild(enemyList[k][i]["enemy"]);
+                    enemyList[k].splice(i, 1);
+                }
+            }
+        }
+        //玉と敵の当たり判定
+        for (let k = 0; k < enemyList.length; k++) {
+            for (let i = 0; i < enemyList[k].length; i++) {
+
+                for (let j = 0; j < bulletList.length; j++) {
+                    let point = bulletList[j].globalToLocal(enemyList[k][i]["enemy"].x, enemyList[k][i]["enemy"].y);
+                    console.log(point.x, point.y);
+                    if (bulletList[j].hitTest(point.x, point.y) == true) {
+                        stage.removeChild(bulletList[j]);
+                        bulletList.splice(j, 1);
+                        enemy["life"] -= 50;
+                        if (enemy["life"] <= 0) {
+                            stage.removeChild(enemyList[k][i]["enemy"]);
+                            enemyList[k].splice(i, 1);
+                        }
                     }
                 }
             }
