@@ -22,6 +22,7 @@ function init() {
     }
     let frameCount = 0;
     let bulletList = [];
+    let enemyListInLine = [];
     let background = new createjs.Shape();
     background.graphics.beginFill("#000000");
     background.graphics.drawRect(0, 0, stage.canvas.width, stage.canvas.height);
@@ -46,24 +47,65 @@ function init() {
                 player.y = stage.canvas.height - 20;
             }
         }
-        function shootBullet(){
+        function shootBullet() {
             let bullet = new createjs.Shape();
-            bullet.graphics.beginFill("white").drawCircle(0,0,3);
-            bullet.x = player.x+16;
+            bullet.graphics.beginFill("white").drawCircle(0, 0, 3);
+            bullet.x = player.x + 16;
             bullet.y = player.y;
             stage.addChild(bullet);
             bulletList.push(bullet);
         }
+        function makeEnemy(life) {
+
+            for (let i = 0; i < 6; i++) {
+                let enemy = new createjs.Bitmap("emoji_u1f47e.png");
+                enemy.scaleX = 0.2;
+                enemy.scaleY = 0.2;
+                enemy.x = i*60;
+                enemy.y = 0;
+                stage.addChild(enemy);
+                let enemyInfo = {
+                    "enemy":enemy,
+                    "life":life
+                }
+                enemyListInLine.push([enemy,life]);
+            }
+        }
+        function moveEnemy(){
+            enemyListInLine.forEach(enemy =>{
+                enemy.y += 5;
+            })
+        }
         frameCount++;
         movePlayer();
-        if(frameCount % 20 == 0){
+        if(frameCount % 120 === 0){
+            makeEnemy(30);
+        }
+        moveEnemy();
+        if (frameCount % 20 === 0) {
             shootBullet();
         }
-        for(let i = 0;i < bulletList.length;i++){
+        for (let i = 0; i < bulletList.length; i++) {
             bulletList[i].y -= 10;
-            if(bulletList[i].y <0){
+            if (bulletList[i].y < 0) {
                 stage.removeChild(bulletList[i]);
-                bulletList.splice(i,1);
+                bulletList.splice(i, 1);
+            }
+        }
+        for(let i = 0;i < enemyListInLine.length;i++){
+            for(let j = 0;j < bulletList.length;j++){
+                let bullet = bulletList[j];
+                let enemy = enemyListInLine[i];
+                let point = bullet.globalToLocal(enemy.x,enemy.y);
+                if(bullet.hitTest(point.x,point.y) == true){
+                    stage.removeChild(bulletList[j]);
+                    bulletList.splice(j,1);
+                    enemy[0] -=3;
+                    if(enemy[1] <= 0){
+                        stage.removeChild(enemyListInLine[i][0]);
+                        enemyListInLine.splice(i,1);
+                    }
+                }
             }
         }
         stage.update();
