@@ -61,6 +61,7 @@ function init() {
                 let enemy = new createjs.Bitmap("emoji_u1f47e.png");
                 enemy.scaleX = 0.2;
                 enemy.scaleY = 0.2;
+                
                 enemy.x = i * 60;
                 enemy.y = 0;
                 stage.addChild(enemy);
@@ -81,6 +82,7 @@ function init() {
         }
         frameCount++;
         movePlayer();
+       
         if (frameCount % 20 === 0) {
             shootBullet();
         }
@@ -94,14 +96,16 @@ function init() {
             if (bulletList[i].y < 0) {
                 stage.removeChild(bulletList[i]);
                 bulletList.splice(i, 1);
+                i--;
             }
         }
         //敵が画面外に行ったとき消去
         for (let k = 0; k < enemyList.length; k++) {
             for (let i = 0; i < enemyList[k].length;i++) {
                 if (enemyList[k][i]["enemy"].y >= 650) {
-                    stage.removeChild(enemyList[k][i]["enemy"]);
+                    stage.removeChild(enemyList[k][i]);
                     enemyList[k].splice(i, 1);
+                    i--;
                 }
             }
         }
@@ -110,15 +114,16 @@ function init() {
             for (let i = 0; i < enemyList[k].length; i++) {
 
                 for (let j = 0; j < bulletList.length; j++) {
-                    let point = bulletList[j].globalToLocal(enemyList[k][i]["enemy"].x, enemyList[k][i]["enemy"].y);
-                    console.log(point.x, point.y);
-                    if (bulletList[j].hitTest(point.x, point.y) == true) {
+                    let point = bulletList[j].localToLocal(0,0,enemyList[k][i]["enemy"]);
+                    if (point.x >-50 && point.x < 50 && point.y > 50&& point.y < 50) {
                         stage.removeChild(bulletList[j]);
                         bulletList.splice(j, 1);
-                        enemy["life"] -= 50;
-                        if (enemy["life"] <= 0) {
+                        j--;
+                        enemyList[k][i]["life"] -= 50;
+                        if (enemyList[k][i]["life"] <= 0) {
                             stage.removeChild(enemyList[k][i]["enemy"]);
                             enemyList[k].splice(i, 1);
+                            i--;
                         }
                     }
                 }
